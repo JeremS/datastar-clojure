@@ -9,8 +9,13 @@
         metosin/malli                  {:mvn/version "0.17.0"}}
 
  :tasks
- {:requires ([tasks :as t])
+ {:requires ([tasks        :as t]
+             [tasks.build  :as build]
+             [tasks.cljdoc :as cljdoc])
 
+  ;; ---------------------------------------------------------------------------
+  ;; Dev tasks
+  ;; ---------------------------------------------------------------------------
   dev
   {:doc "Starts a dev repl. Additional deps aliases can be passed as arguments."
    :task (t/dev :http-kit :ring-jetty :malli-schemas)}
@@ -22,11 +27,14 @@
   dev:empty
   {:doc "Dev repl with no adapters."
    :task (t/dev :malli-schemas)}
-  
+ 
   dev:bb
   {:doc "Start a babashka nrepl server. An addr like `localhost:1234` can be passed as argument."
    :task (t/dev-bb)}
 
+  ;; ---------------------------------------------------------------------------
+  ;; Test Tasks
+  ;; ---------------------------------------------------------------------------
   test:all
   {:doc "Run all tests once."
    :task (t/lazytest [:http-kit
@@ -67,31 +75,34 @@
   {:doc "Run core unit tests with babashka."
    :task (t/bb-lazytest [:test.paths/core-sdk
                          :test.paths/malli-schemas])}
-  
+
   test:sdk-common
   {:doc "Run the server used for the SDKs' common tests."
    :task (t/start-test-server)}
 
 
+  ;; ---------------------------------------------------------------------------
+  ;; Build tasks
+  ;; ---------------------------------------------------------------------------
   jar:sdk
   {:doc  "Build jar for the common sdk"
-   :task (t/lib-jar! t/sdk-dir)}
+   :task (build/lib-jar! t/sdk-dir)}
 
   jar:sdk-adapter-ring
   {:doc  "Build jar for the adapter-ring"
-   :task (t/lib-jar! t/sdk-adapter-ring-dir)}
+   :task (build/lib-jar! t/sdk-adapter-ring-dir)}
 
   jar:sdk-adapter-http-kit
   {:doc  "Build jar for the adapter-http-kit"
-   :task (t/lib-jar! t/sdk-adapter-http-kit-dir)}
+   :task (build/lib-jar! t/sdk-adapter-http-kit-dir)}
 
   jar:sdk-brotli
   {:doc  "Build jar for the Brotli library"
-   :task (t/lib-jar! t/sdk-brotli-dir)}
+   :task (build/lib-jar! t/sdk-brotli-dir)}
 
   jar:sdk-malli-schemas
   {:doc  "Build jar for the malli-schemas"
-   :task (t/lib-jar! t/sdk-malli-schemas-dir)}
+   :task (build/lib-jar! t/sdk-malli-schemas-dir)}
 
   jar:all
   {:doc     "Build the jar for all the libs"
@@ -102,30 +113,51 @@
              jar:sdk-brotli
              jar:sdk-malli-schemas]}
 
-  install:all
-  {:doc "Install all libraries"
+  install:clean
+  {:doc "Deletes datastar lib from the local maven repository."
    :depends [clean]
-   :task (doseq [dir t/sdk-lib-dirs]
-           (t/lib-install! dir))}
+   :task (build/clean-maven-dir! dir)}
+
+
+  install:all
+  {:doc "Install all libraries locally."
+   :depends [clean]
+   :task (doseq [dir build/sdk-lib-dirs]
+           (build/lib-install! dir))}
 
   clean
-  {:doc  "Clean build artifacts"
-   :task (doseq [dir t/sdk-lib-dirs]
+  {:doc  "Clean build artifacts in each library directory."
+   :task (doseq [dir build/sdk-lib-dirs]
            (clojure {:dir dir} "-T:build clean"))}
 
   set-version
   {:doc  "Set the version in all libs"
-   :task (doseq [dir t/sdk-lib-dirs]
-           (t/lib-set-version! dir (first *command-line-args*)))}
+   :task (doseq [dir build/sdk-lib-dirs]
+           (build/lib-set-version! dir (first *command-line-args*)))}
 
   bump-version
   {:doc  "Bump the version component in all libs. First argument must be one of: major, minor, patch"
-   :task (doseq [dir sdk-lib-dirs]
+   :task (doseq [dir build/sdk-lib-dirs]
            (let [component (first *command-line-args*)]
-             (t/lib-bump! dir component)))}
+             (build/lib-bump! dir component)))}
 
   publish:all
   {:doc     "Publish the clojure sdk libs to clojars"
    :depends [jar:all]
-   :task    (doseq [dir t/sdk-lib-dirs]
-              (t/lib-publish! dir))}}}
+   :task    (doseq [dir build/sdk-lib-dirs]
+              (build/lib-publish! dir))}
+
+  ;; ---------------------------------------------------------------------------
+  ;; Cljdoc tasks
+  ;; ---------------------------------------------------------------------------
+  cljdoc:clean
+  {:doc "Clean local cljdoc data."
+   :task (cljdoc/clean!)}
+
+  cljdoc:server
+  {:doc "Start a local cljdoc server."
+   :task (cljdoc/start-server!)}
+
+  cljdoc:ingest-sdk
+  {:doc "Tell cljdoc to ingest the core SDK."
+   :task (cljdoc/ingest! :sdk)}}}
