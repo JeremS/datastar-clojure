@@ -9,7 +9,20 @@
   See the `closing-io-exception` and `closing-on-close-exception` vars in your
   adapter namespace to get at a specific exception. See the docstring for
   `starfederation.datastar.clojure.adapter.common/close-sse!` for more
-  information about the whole sse-gen closing process.
+  information about the whole sse-gen closing process. (#37)
+- Brotli now uses UTF-8 by default (#35)
+
+### Fixed
+- Fixed a typo in the Aleph malli schema namespace (#25)
+- Reworked docstings and typo fixes (#28)
+- Build process cleanup: removed unused code (#33), simplified bb tasks (#34)
+- fixed the ci process, several jar weren't available on github after a build (#29)
+
+### Added
+- Added malli schemas for element namespaces when using patch-elements (#27)
+- Added warnings about string interpolation in execute-script helpers docstrings (#31)
+
+
 
 ## 2026-04-20 - RC9
 ### Changed
