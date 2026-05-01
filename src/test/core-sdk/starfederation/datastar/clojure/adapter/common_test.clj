@@ -1,6 +1,5 @@
 (ns starfederation.datastar.clojure.adapter.common-test
   (:require
-    [matcher-combinators.test :refer [thrown-match?]]
     [starfederation.datastar.clojure.api :as d*]
     [starfederation.datastar.clojure.adapter.common :as ac]
     [starfederation.datastar.clojure.adapter.test :as at]
